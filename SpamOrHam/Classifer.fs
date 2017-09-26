@@ -41,6 +41,37 @@ module Tokenizer =
         text.Split(' ')
         |> Set.ofArray
 
+module Summarizer = 
+
+    open Domain
+
+    let createSummary ( group : seq<Set<string>> )
+                      ( total : int )
+                      ( tokensToUse : Set<string> ) =
+
+        let correctionFactor = 1.0
+
+        let totalSize = 
+            float ( group |> Seq.length ) + correctionFactor
+
+        let getProportionalityForToken ( token : string ) : float =
+            let countOfTokenInGroup = 
+                group 
+                |> Seq.filter( Set.contains( token )) 
+                |> Seq.length 
+                |> float 
+
+            ( countOfTokenInGroup + correctionFactor ) / ( totalSize + correctionFactor ) 
+
+        let createMap : Map<string, float> =
+            tokensToUse 
+            |> Set.map(fun t -> t, getProportionalityForToken t ) 
+            |> Map.ofSeq
+        {
+            Proportion = ( totalSize - correctionFactor ) / float( total ) 
+            TokensToCount = createMap
+        }
+
 module Classifier = 
 
     open Domain
@@ -67,3 +98,7 @@ module Classifier =
             score tokenizedText group )
         |> fst
         |> extractTypeFromRecord 
+
+module Trainer = 
+
+    let train = 23
