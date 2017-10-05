@@ -17,7 +17,7 @@ module Parser =
 
     let dataPath = Path.Combine( __SOURCE_DIRECTORY__, "Data", "SMSSpamCollection" )
 
-    let parseSingleLine ( line : string ) =
+    let parseSingleLine ( line : string ) : ClassifiedSMS =
         let splitLine = line.Split( '\t' )
         let smsType = splitLine.[0]
         let text = splitLine.[1]
@@ -35,6 +35,58 @@ module Parser =
         File.ReadAllLines dataPath
         |> Seq.toList
         |> Seq.map parseSingleLine
+
+module TestModule = 
+
+    let dataSet = Parser.parseAllLines
+
+    open Domain
+
+    let totalCount = 
+        dataSet |> Seq.length
+
+    let spamCount =
+        dataSet
+        |> Seq.filter( fun s -> s.Type = Spam )
+        |> Seq.length 
+
+    let spamProportion = float( spamCount ) / float ( totalCount )
+
+    let hamCount =
+        dataSet
+        |> Seq.filter( fun s -> s.Type = Ham )
+        |> Seq.length
+
+    let hamProportion = float ( hamCount ) / float ( totalCount )
+
+    let freeGivenSpam = 
+        dataSet
+        |> Seq.filter( fun s -> s.Type = Spam )
+        |> Seq.filter( fun s -> s.Text.Contains("FREE"))
+        |> Seq.length
+
+    let freeGivenHam =  
+        dataSet
+        |> Seq.filter( fun s -> s.Type = Ham )
+        |> Seq.filter( fun s -> s.Text.Contains("FREE"))
+        |> Seq.length
+
+    let freeTotal =
+        dataSet
+        |> Seq.filter( fun s -> s.Text.Contains("FREE"))
+        |> Seq.length
+
+    let spamGivenFree = 
+        dataSet
+        |> Seq.filter( fun s -> s.Text.Contains("FREE"))
+        |> Seq.filter( fun s -> s.Type = Spam )
+        |> Seq.length
+
+    let hamGivenFree =
+        dataSet
+        |> Seq.filter( fun s -> s.Text.Contains("FREE"))
+        |> Seq.filter( fun s -> s.Type = Ham )
+        |> Seq.length
 
 module Tokenizer =
     let tokenize ( text : string ) : Set<string> = 
@@ -98,7 +150,3 @@ module Classifier =
             score tokenizedText group )
         |> fst
         |> extractTypeFromRecord 
-
-module Trainer = 
-
-    let train = 23
